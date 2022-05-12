@@ -1,4 +1,5 @@
 com\itheima\ReggieApplication.class
+com\itheima\filter\LoginCheckFilter.class
 com\itheima\entity\Employee.class
 com\itheima\commen\R.class
 com\itheima\mapper\EmployeeMapper.class
