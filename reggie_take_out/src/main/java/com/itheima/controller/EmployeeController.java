@@ -72,6 +72,7 @@ public class EmployeeController {
      * @param request
      * @return
      */
+    @PostMapping("/logout")
     public R<String> logout(HttpServletRequest request) {
         HttpSession session = request.getSession();
         session.removeAttribute("employee");
