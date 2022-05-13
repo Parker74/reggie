@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.time.LocalDateTime;
 
 /**
  * @author HaoXiaoLong
@@ -30,7 +29,6 @@ public class EmployeeController {
 
     /**
      * 登录功能
-     *
      * @param request
      * @param employee
      * @return
@@ -62,14 +60,11 @@ public class EmployeeController {
 
         HttpSession session = request.getSession();
         session.setAttribute("employee", emp.getId());
-        Object employee1 = session.getAttribute("employee");
-        System.out.println(employee1);
         return R.success(emp);
     }
 
     /**
      * 登出功能
-     *
      * @param request
      * @return
      */
@@ -82,7 +77,6 @@ public class EmployeeController {
 
     /**
      * 新增员工
-     *
      * @param employee 封装数据的对象
      * @param request  请求对象
      * @return
@@ -91,18 +85,12 @@ public class EmployeeController {
     public R<String> save(@RequestBody Employee employee, HttpServletRequest request, HttpServletResponse response) {
         log.info("新增员工,员工信息:{}", employee.toString());
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-        Long empId = (Long) request.getSession().getAttribute("employee");
-        employee.setCreateUser(empId);
-        employee.setUpdateUser(empId);
         employeeService.save(employee);
         return R.success("新增员工成功");
     }
 
     /**
      * 员工信息分页查询
-     *
      * @param page     当前查询页码
      * @param pageSize 每页展示记录数
      * @param name     员工姓名 - 可选参数
@@ -111,18 +99,15 @@ public class EmployeeController {
     @GetMapping("/page")
     public R<Page<Employee>> page(@RequestParam(defaultValue = "1") Integer page,
                                   @RequestParam(defaultValue = "10") Integer pageSize,
-                                  @RequestBody(required = false) String name) {
+                                  @RequestParam(required = false) String name) {
 
         log.info("page = {},pageSize = {},name = {}", page, pageSize, name);
         //分页构造器
         Page<Employee> pageInfo = new Page<>(page, pageSize);
-
+        //条件构造器
         LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
-
         wrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
-
         wrapper.orderByDesc(Employee::getCreateTime);
-
         employeeService.page(pageInfo, wrapper);
         return R.success(pageInfo);
     }
@@ -136,9 +121,6 @@ public class EmployeeController {
     @PutMapping
     public R<String> update(HttpServletRequest request, @RequestBody Employee employee) {
         log.info(employee.toString());
-        Long empId = (Long) request.getSession().getAttribute("employee");
-        employee.setUpdateUser(empId);
-        employee.setUpdateTime(LocalDateTime.now());
         employeeService.updateById(employee);
         return R.success("员工信息修改成功");
     }
@@ -146,7 +128,7 @@ public class EmployeeController {
     /**
      * 根据id查找员工信息
      * @param id
-     * @return
+     * @return+
      */
     @GetMapping("/{id}")
     public R<Employee> getById(@PathVariable Long id){
@@ -166,9 +148,8 @@ public class EmployeeController {
      */
     @PutMapping("/{id}")
     public R<String> updateById(HttpServletRequest request,@RequestBody Employee employee){
-        Long empId = (Long)request.getSession().getAttribute("employee");
-        employee.setUpdateTime(LocalDateTime.now());
-        employee.setUpdateUser(empId);
+        long id = Thread.currentThread().getId();
+        log.info("线程id:{}",id);
         employeeService.updateById(employee);
         return R.success("修改员工信息成功");
     }

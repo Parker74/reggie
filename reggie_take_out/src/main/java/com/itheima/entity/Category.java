@@ -8,39 +8,38 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * @author HaoXiaoLong
- * @version 1.0
- * @date 2022/5/11 16:59
+ * 分类
  */
 @Data
-public class Employee implements Serializable {
+public class Category implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     private Long id;
 
-    private String username;
+    //类型 1 菜品分类 2 套餐分类
+    private Integer type;
 
+    //分类名称
     private String name;
 
-    private String password;
+    //顺序
+    private Integer sort;
 
-    private String phone;
-
-    private String sex;
-
-    private String idNumber; //驼峰命名法 ---> 映射的字段名为 id_number
-
-    private Integer status;
-
+    //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    //更新时间
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    //创建人
     @TableField(fill = FieldFill.INSERT)
     private Long createUser;
 
+    //修改人
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
+
 }

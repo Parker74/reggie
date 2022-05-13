@@ -1,6 +1,7 @@
 package com.itheima.filter;
 
 import com.alibaba.fastjson.JSON;
+import com.itheima.commen.BaseContext;
 import com.itheima.commen.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
@@ -48,6 +49,8 @@ public class LoginCheckFilter implements Filter {
 
         if (employee != null) {
             log.info("用户已登录，用户id为：{}", request.getSession().getAttribute("employee"));
+            Long employee1 = (Long)request.getSession().getAttribute("employee");
+            BaseContext.setCurrentId(employee1);
             filterChain.doFilter(request, response);
             return;
         }
