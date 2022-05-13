@@ -111,7 +111,7 @@ public class EmployeeController {
     @GetMapping("/page")
     public R<Page<Employee>> page(@RequestParam(defaultValue = "1") Integer page,
                                   @RequestParam(defaultValue = "10") Integer pageSize,
-                                  @RequestBody(required = false) String name) {
+                                  @RequestParam(required = false) String name) {
 
         log.info("page = {},pageSize = {},name = {}", page, pageSize, name);
         //分页构造器
@@ -121,6 +121,7 @@ public class EmployeeController {
 
         wrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
 
+        System.out.println(name);
         wrapper.orderByDesc(Employee::getCreateTime);
 
         employeeService.page(pageInfo, wrapper);
