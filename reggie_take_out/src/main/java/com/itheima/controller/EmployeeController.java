@@ -1,23 +1,20 @@
 package com.itheima.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.commen.R;
 import com.itheima.entity.Employee;
 import com.itheima.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import sun.security.krb5.internal.crypto.DesCbcMd5EType;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * @author HaoXiaoLong
@@ -30,12 +27,6 @@ import java.util.Map;
 public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
-/*
-1.拿到前端传过来的用户名与密码,进行加密;
-2.调用Service查询判断用户名是否存在(如果用户名不存在的话就没有继续的必要了);
-3.判断用户名与密码是否正确
-4.判断状态是否为1
- */
 
     /**
      * 登录功能
@@ -91,13 +82,14 @@ public class EmployeeController {
 
     /**
      * 新增员工
-     * @param employee
-     * @param request
+     *
+     * @param employee 封装数据的对象
+     * @param request  请求对象
      * @return
      */
     @PostMapping
-    public R<String> save(@RequestBody Employee employee,HttpServletRequest request) {
-        log.info("新增员工,员工信息:{}",employee.toString());
+    public R<String> save(@RequestBody Employee employee, HttpServletRequest request, HttpServletResponse response) {
+        log.info("新增员工,员工信息:{}", employee.toString());
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
         employee.setCreateTime(LocalDateTime.now());
         employee.setUpdateTime(LocalDateTime.now());
@@ -106,5 +98,78 @@ public class EmployeeController {
         employee.setUpdateUser(empId);
         employeeService.save(employee);
         return R.success("新增员工成功");
+    }
+
+    /**
+     * 员工信息分页查询
+     *
+     * @param page     当前查询页码
+     * @param pageSize 每页展示记录数
+     * @param name     员工姓名 - 可选参数
+     * @return
+     */
+    @GetMapping("/page")
+    public R<Page<Employee>> page(@RequestParam(defaultValue = "1") Integer page,
+                                  @RequestParam(defaultValue = "10") Integer pageSize,
+                                  @RequestBody(required = false) String name) {
+
+        log.info("page = {},pageSize = {},name = {}", page, pageSize, name);
+        //分页构造器
+        Page<Employee> pageInfo = new Page<>(page, pageSize);
+
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+
+        wrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
+
+        wrapper.orderByDesc(Employee::getCreateTime);
+
+        employeeService.page(pageInfo, wrapper);
+        return R.success(pageInfo);
+    }
+
+    /**
+     * 根据id修改员工信息
+     * @param request
+     * @param employee
+     * @return
+     */
+    @PutMapping
+    public R<String> update(HttpServletRequest request, @RequestBody Employee employee) {
+        log.info(employee.toString());
+        Long empId = (Long) request.getSession().getAttribute("employee");
+        employee.setUpdateUser(empId);
+        employee.setUpdateTime(LocalDateTime.now());
+        employeeService.updateById(employee);
+        return R.success("员工信息修改成功");
+    }
+
+    /**
+     * 根据id查找员工信息
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public R<Employee> getById(@PathVariable Long id){
+        log.info("根据id查询员工信息...");
+        Employee employee = employeeService.getById(id);
+        if (employee != null){
+            return R.success(employee);
+        }
+        return R.error("未查询到任何信息");
+    }
+
+    /**
+     * 根据id修改员工信息
+     * @param request
+     * @param employee
+     * @return
+     */
+    @PutMapping("/{id}")
+    public R<String> updateById(HttpServletRequest request,@RequestBody Employee employee){
+        Long empId = (Long)request.getSession().getAttribute("employee");
+        employee.setUpdateTime(LocalDateTime.now());
+        employee.setUpdateUser(empId);
+        employeeService.updateById(employee);
+        return R.success("修改员工信息成功");
     }
 }

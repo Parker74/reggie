@@ -53,7 +53,7 @@ public class LoginCheckFilter implements Filter {
         }
         log.info("用户未登录");
 
-        response.getWriter().write(JSON.toJSONString(R.error("NOT LOGIN")));
+        response.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
         return;
     }
 
