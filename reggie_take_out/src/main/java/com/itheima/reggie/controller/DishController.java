@@ -108,4 +108,19 @@ public class DishController {
         return R.success("修改菜品成功");
     }
 
+    /**
+     * 根据条件查询对应的菜品数据
+     * @param dish
+     * @return
+     */
+    @GetMapping("/list")
+    public R<List<Dish>> list(Dish dish){
+        log.info("dish:{}",dish);
+        LambdaQueryWrapper<Dish> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(dish.getCategoryId() !=null,Dish::getCategoryId,dish.getCategoryId());
+        wrapper.eq(Dish::getStatus,1);
+        wrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+        List<Dish> list = dishService.list(wrapper);
+        return R.success(list);
+    }
 }
