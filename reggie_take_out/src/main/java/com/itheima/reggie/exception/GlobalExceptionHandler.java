@@ -1,5 +1,6 @@
 package com.itheima.reggie.exception;
 
+import com.itheima.reggie.commen.CustomException;
 import com.itheima.reggie.commen.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -30,5 +31,10 @@ public class GlobalExceptionHandler {
             return R.error(replace + "已存在");
         }
         return R.error("未知错误");
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public R<String> customException(CustomException ex){
+        return R.error(ex.getMessage());
     }
 }

@@ -34,7 +34,7 @@ public class LoginCheckFilter implements Filter {
         log.info("拦截到请求:{}", uri);
 
         //可以供用户随意查看的一些静态资源
-        String[] urls = {"/employee/login", "/employee/logout", "/backend/**", "/front/**"};
+        String[] urls = {"/employee/login", "/employee/logout", "/backend/**", "/front/**", "/user/sendMsg", "/user/login"};
 
         boolean check = check(urls, uri);
 
@@ -47,14 +47,23 @@ public class LoginCheckFilter implements Filter {
         HttpSession session = request.getSession();
         Object employee = session.getAttribute("employee");
 
+        //4-2、判断登录状态，如果已登录，则直接放行
         if (employee != null) {
             log.info("用户已登录，用户id为：{}", request.getSession().getAttribute("employee"));
-            Long employee1 = (Long)request.getSession().getAttribute("employee");
+            Long employee1 = (Long) request.getSession().getAttribute("employee");
             BaseContext.setCurrentId(employee1);
             filterChain.doFilter(request, response);
             return;
         }
         log.info("用户未登录");
+
+        //4-2、判断登录状态，如果已登录，则直接放行
+        if (request.getSession().getAttribute("user") != null) {
+            Long userId = (Long) request.getSession().getAttribute("user");
+            BaseContext.setCurrentId(userId);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         response.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
         return;

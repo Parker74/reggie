@@ -12,6 +12,7 @@ import com.itheima.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -82,9 +83,25 @@ public class SetmealController {
      * @param ids
      * @return
      */
+    @Transactional
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids){
         log.info("ids : {}",ids);
-        return null;
+        setmealService.deleteWithDish(ids);
+        return R.success("删除成功");
+    }
+
+    /**
+     * 批量修改状态
+     * @param status
+     * @param ids
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    public R<String> updateStatus(@PathVariable Integer status,@RequestParam List<Long> ids){
+        log.info("Status : {}",status);
+        log.info("ids : {}",ids);
+        setmealService.updateStatus(status,ids);
+        return R.success("修改状态成功");
     }
 }

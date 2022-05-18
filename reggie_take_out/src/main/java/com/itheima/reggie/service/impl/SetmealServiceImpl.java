@@ -1,6 +1,7 @@
 package com.itheima.reggie.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.commen.CustomException;
 import com.itheima.reggie.dto.SetmealDto;
@@ -52,18 +53,31 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
     public void deleteWithDish(List<Long> ids) {
 
         LambdaQueryWrapper<Setmeal> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(ids != null, Setmeal::getId, ids);
-        wrapper.eq(Setmeal::getStatus, 1);
+        wrapper.in(Setmeal::getId,ids);
+        wrapper.eq(Setmeal::getStatus,1);
 
-        int count = this.count();
+        int count = this.count(wrapper);
+
+
         if (count > 0) {
-            throw new CustomException("商品已起售,无法删除");
+            throw new CustomException("商品正在起售中,无法删除");
         }
 
         this.removeByIds(ids);
+        LambdaQueryWrapper<SetmealDish> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.in(SetmealDish::getId,ids);
+        setmealDishService.remove(wrapper1);
+    }
 
-        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SetmealDish::getSetmealId, ids);
-        setmealDishService.remove(queryWrapper);
+    /**
+     * 批量修改状态
+     * @param status
+     * @param ids
+     */
+    @Override
+    public void updateStatus(Integer status, List<Long> ids) {
+        LambdaUpdateWrapper<Setmeal> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.in(Setmeal::getId,ids).set(Setmeal::getStatus,status);
+        this.update(wrapper);
     }
 }

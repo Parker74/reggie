@@ -6,6 +6,7 @@ import com.itheima.reggie.commen.R;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.entity.Category;
 import com.itheima.reggie.entity.Dish;
+import com.itheima.reggie.entity.DishFlavor;
 import com.itheima.reggie.service.CategoryService;
 import com.itheima.reggie.service.DishFlavorService;
 import com.itheima.reggie.service.DishService;
@@ -50,6 +51,7 @@ public class DishController {
 
     /**
      * 分页查询菜品分类
+     *
      * @param page
      * @param pageSize
      * @param name
@@ -88,39 +90,75 @@ public class DishController {
 
     /**
      * 数据回显
+     *
      * @param id
      * @return
      */
     @GetMapping("/{id}")
-    public R<DishDto> update(@PathVariable Long id){
+    public R<DishDto> update(@PathVariable Long id) {
         DishDto dishDto = dishService.getByIdWithFlavor(id);
         return R.success(dishDto);
     }
 
     /**
      * 新增菜品
+     *
      * @param dishDto
      * @return
      */
     @PutMapping
-    public R<String> update(@RequestBody DishDto dishDto){
+    public R<String> update(@RequestBody DishDto dishDto) {
         dishService.updateWithFlavor(dishDto);
         return R.success("修改菜品成功");
     }
 
     /**
      * 根据条件查询对应的菜品数据
+     *
      * @param dish
      * @return
      */
     @GetMapping("/list")
-    public R<List<Dish>> list(Dish dish){
-        log.info("dish:{}",dish);
+    public R<List<DishDto>> list(Dish dish) {
+        log.info("dish:{}", dish);
         LambdaQueryWrapper<Dish> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(dish.getCategoryId() !=null,Dish::getCategoryId,dish.getCategoryId());
-        wrapper.eq(Dish::getStatus,1);
+        wrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+        wrapper.eq(Dish::getStatus, 1);
         wrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> list = dishService.list(wrapper);
-        return R.success(list);
+
+        List<DishDto> dishDtoList = new ArrayList<>();
+
+        for (Dish dish1 : list) {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(dish1, dishDto);
+            Long categoryId = dish1.getCategoryId();
+            Category category = categoryService.getById(categoryId);
+
+            if (category != null) {
+                Long dish1Id = dish1.getId();
+                LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(DishFlavor::getDishId, dish1Id);
+                List<DishFlavor> dishFlavorList = dishFlavorService.list(queryWrapper);
+                dishDto.setFlavors(dishFlavorList);
+                dishDtoList.add(dishDto);
+            }
+        }
+        return R.success(dishDtoList);
+    }
+
+    @DeleteMapping
+    public R<String> remove(@RequestParam List<Long> ids) {
+        log.info("dishDto : {}", ids);
+        dishService.remove(ids);
+        return R.success("删除成功");
+    }
+
+    @PostMapping("/status/{status}")
+    public R<String> updateStatus(@PathVariable Integer status, @RequestParam List<Long> ids) {
+        log.info("status : {}", status);
+        log.info("ids : {}", ids);
+        dishService.updateStatus(status, ids);
+        return R.success("操作成功");
     }
 }

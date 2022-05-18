@@ -2,7 +2,10 @@ package com.itheima.reggie.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.reggie.commen.CustomException;
+import com.itheima.reggie.commen.R;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.entity.Dish;
 import com.itheima.reggie.entity.DishFlavor;
@@ -27,6 +30,9 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
     @Autowired
     private DishFlavorService dishFlavorService;
+
+    @Autowired
+    private DishService dishService;
 
     /**
      * 新增菜品,同时保存菜品口味
@@ -70,7 +76,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     @Override
     @Transactional
     public void updateWithFlavor(DishDto dishDto) {
-        this.getById(dishDto);
+        this.updateById(dishDto);
 
         LambdaQueryWrapper<DishFlavor> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DishFlavor::getDishId, dishDto.getId());
@@ -78,9 +84,37 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishFlavorService.remove(wrapper);
 
         List<DishFlavor> flavors = dishDto.getFlavors();
+
         for (DishFlavor flavor : flavors) {
             flavor.setDishId(dishDto.getId());
         }
         dishFlavorService.saveBatch(flavors);
+    }
+
+    @Override
+    public void remove(List<Long> ids) {
+
+        this.removeByIds(ids);
+
+        LambdaQueryWrapper<Dish> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.in(Dish::getId, ids);
+        wrapper1.eq(Dish::getStatus, 1);
+        List<Dish> list = dishService.list(wrapper1);
+
+        if (list != null) {
+            throw new CustomException("您的商品已起售,无法删除");
+        }
+
+        LambdaQueryWrapper<DishFlavor> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(DishFlavor::getDishId, ids);
+        dishFlavorService.remove(wrapper);
+    }
+
+    @Override
+    public R<String> updateStatus(Integer status, List<Long> ids) {
+        LambdaUpdateWrapper<Dish> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.in(Dish::getId,ids).set(Dish::getStatus,status);
+        dishService.update(wrapper);
+        return R.success("批量修改成功");
     }
 }
