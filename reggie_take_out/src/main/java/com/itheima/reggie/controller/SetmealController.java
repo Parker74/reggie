@@ -7,11 +7,12 @@ import com.itheima.reggie.dto.SetmealDto;
 import com.itheima.reggie.entity.Category;
 import com.itheima.reggie.entity.Setmeal;
 import com.itheima.reggie.service.CategoryService;
-import com.itheima.reggie.service.SetmealDishService;
 import com.itheima.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,11 +31,11 @@ public class SetmealController {
 
     @Autowired
     private SetmealService setmealService;
-    @Autowired
-    private SetmealDishService setmealDishService;
+
     @Autowired
     private CategoryService categoryService;
 
+    @CacheEvict(value = "setmealCache",allEntries = true)
     @PostMapping
     public R<String> save(@RequestBody SetmealDto setmealDto) {
         setmealService.saveWithDish(setmealDto);
@@ -84,6 +85,7 @@ public class SetmealController {
      * @return
      */
     @Transactional
+    @CacheEvict(value = "setmealCache", allEntries = true)//清除setmealCache名称下,所有的缓存数据
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids){
         log.info("ids : {}",ids);
@@ -103,5 +105,21 @@ public class SetmealController {
         log.info("ids : {}",ids);
         setmealService.updateStatus(status,ids);
         return R.success("修改状态成功");
+    }
+
+    /**
+     * 商务套餐菜品展示
+     * @param setmeal
+     * @return
+     */
+    @Cacheable(value = "setmealCache", key = "#setmeal.getCategoryId() + '_' + #setmeal.getStatus()")
+    @GetMapping("/list")
+    public R<List<Setmeal>> list(Setmeal setmeal){
+        LambdaQueryWrapper<Setmeal> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(setmeal.getCategoryId() != null,Setmeal::getCategoryId,setmeal.getCategoryId());
+        wrapper.eq(setmeal.getStatus() != null,Setmeal::getStatus,setmeal.getStatus());
+        wrapper.orderByDesc(Setmeal::getCreateTime);
+        List<Setmeal> list = setmealService.list(wrapper);
+        return R.success(list);
     }
 }

@@ -3,6 +3,7 @@ package com.itheima.reggie.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.reggie.commen.BaseContext;
 import com.itheima.reggie.commen.CustomException;
 import com.itheima.reggie.entity.*;
 import com.itheima.reggie.mapper.OrderMapper;
@@ -44,7 +45,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
      */
     @Override
     public void submit(Orders orders) {
-        Long userId = orders.getUserId();
+        Long userId = BaseContext.getCurrentId();
 
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ShoppingCart::getUserId, userId);

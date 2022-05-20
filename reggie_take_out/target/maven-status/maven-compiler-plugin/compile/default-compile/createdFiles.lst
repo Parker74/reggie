@@ -43,6 +43,7 @@ com\itheima\reggie\entity\Dish.class
 com\itheima\reggie\filter\JacksonObjectMapper.class
 com\itheima\reggie\service\impl\DishFlavorServiceImpl.class
 com\itheima\reggie\controller\DishController.class
+com\itheima\reggie\dto\OrdersDto.class
 com\itheima\reggie\mapper\OrderDetailMapper.class
 com\itheima\reggie\controller\EmployeeController.class
 com\itheima\reggie\mapper\SetmealMapper.class
